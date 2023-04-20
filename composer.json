@@ -1,0 +1,30 @@
+{
+    "name": "ids/localizator",
+    "description": "Localizator's api client (sdk)",
+    "type": "library",
+    "require": {
+        "guzzlehttp/guzzle": "7.5",
+        "jms/serializer": "^3.0@dev",
+        "symfony/cache": "6.3.x-dev"
+    },
+    "autoload": {
+        "psr-4": {
+            "Ids\\Localizator\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Ids\\Localizator\\Tests\\": "tests/"
+        }
+    },
+    "authors": [
+        {
+            "name": "ids"
+        }
+    ],
+    "minimum-stability": "dev",
+    "require-dev": {
+        "phpunit/phpunit": "^10.1@dev",
+        "symfony/var-dumper": "6.3.x-dev"
+    }
+}
