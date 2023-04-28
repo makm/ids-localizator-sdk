@@ -1,5 +1,5 @@
 {
-    "name": "ids/localizator",
+    "name": "idynsys/localizator",
     "description": "Localizator's api client (sdk)",
     "type": "library",
     "require": {
