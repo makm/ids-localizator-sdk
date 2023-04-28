@@ -27,7 +27,7 @@ class PostCatalogsItemsRequest
         ?int $organizationId = -1,
         ?int $applicationId = -1,
         ?int $productId = null,
-        ?int $catalogDescription = null,
+        ?int $catalogDescription = null
     ) {
         $this->organizationId = $organizationId;
         $this->applicationId = $applicationId;

@@ -17,21 +17,40 @@ class Translator
     private const LAST_WARMING_TIME_KEY = 'translator_last_warming_time';
     private bool $warmCacheIfEmpty = false;
 
+    private Client $client;
+    private CacheItemPoolInterface $itemPool;
+    private int $organizationId;
+    private ?int $applicationId;
+    private ?string $productId;
+
+    /**
+     * @param  Client  $client
+     * @param  CacheItemPoolInterface  $itemPool
+     * @param  int  $organizationId
+     * @param  int|null  $applicationId
+     * @param  string|null  $productId
+     */
     public function __construct(
-        private Client $client,
-        private CacheItemPoolInterface $itemPool,
-        private int $organizationId = -1,
-        private ?int $applicationId = null,
-        private ?string $productId = null
+        Client $client,
+        CacheItemPoolInterface $itemPool,
+        int $organizationId,
+        ?int $applicationId,
+        ?string $productId
     ) {
+        $this->client = $client;
+        $this->itemPool = $itemPool;
+        $this->organizationId = $organizationId;
+        $this->applicationId = $applicationId;
+        $this->productId = $productId;
     }
+
 
     private function getCacheKey(string $lang, string $categoryName, string $code): string
     {
-        return printf(
+        return sprintf(
             '%s-%s_%s-%s-%s',
-            $this->applicationId,
-            $this->productId,
+            $this->applicationId ?: 'no-app',
+            $this->productId ?: 'no-prod',
             strtolower($lang),
             $categoryName,
             $code
@@ -44,12 +63,13 @@ class Translator
     }
 
     /**
-     * @param bool $warmCacheIfEmpty
+     * @param  bool  $warmCacheIfEmpty
      * @return Translator
      */
     public function setWarmCacheIfEmpty(bool $warmCacheIfEmpty): Translator
     {
         $this->warmCacheIfEmpty = $warmCacheIfEmpty;
+
         return $this;
     }
 
@@ -67,6 +87,7 @@ class Translator
         if ($this->itemPool->hasItem($key)) {
             return $this->itemPool->getItem($key)->get();
         }
+
         return null;
     }
 
@@ -77,14 +98,15 @@ class Translator
     public function addTranslation(string $lang, string $catalogName, string $code, string $value): void
     {
         $postRequest = new PostCatalogsItemsRequest(
-            catalogName: $catalogName,
-            itemId: $code,
-            translations: [
-                new Translation($lang, $value)
+            $catalogName,
+            $code,
+            null,
+            [
+                new Translation($lang, $value),
             ],
-            organizationId: $this->organizationId,
-            applicationId: $this->applicationId,
-            productId: $this->productId
+            $this->organizationId,
+            $this->applicationId,
+            $this->productId
         );
 
         $result = $this->client->postCatalogItems($postRequest);
@@ -138,8 +160,10 @@ class Translator
     {
         if ($this->itemPool->hasItem(self::LAST_WARMING_TIME_KEY)) {
             $lastWarmingTimeItem = $this->itemPool->getItem(self::LAST_WARMING_TIME_KEY);
+
             return \DateTime::createFromFormat(DateTimeInterface::ATOM, $lastWarmingTimeItem->get());
         }
+
         return null;
     }
 

@@ -12,8 +12,13 @@ use JMS\Serializer\Serializer;
 
 class Client
 {
-    public function __construct(private ClientInterface $client, private Serializer $serializer)
+    private ClientInterface $client;
+    private Serializer $serializer;
+
+    public function __construct(ClientInterface $client, Serializer $serializer)
     {
+        $this->client = $client;
+        $this->serializer = $serializer;
     }
 
     /**
@@ -25,15 +30,16 @@ class Client
         $response = $this->client->get(
             '/api/translations/for-application',
             [
-                'query' => $this->serializer->toArray($request)
+                'query' => $this->serializer->toArray($request),
             ]
         );
 
         $data = $this->serializer->deserialize(
             $response->getBody(),
-            'array<string,' . GetTranslationsApplicationResult::class . '>',
+            'array<string,'.GetTranslationsApplicationResult::class.'>',
             'json'
         );
+
         return $data['data'];
     }
 
@@ -45,15 +51,16 @@ class Client
         $response = $this->client->post(
             '/api/localizer/catalogs/items',
             [
-                'body' => $this->serializer->serialize($request, 'json')
+                'body' => $this->serializer->serialize($request, 'json'),
             ]
         );
 
         $data = $this->serializer->deserialize(
             $response->getBody(),
-            'array<string,' . PostCatalogsItemsResult::class . '>',
+            'array<string,'.PostCatalogsItemsResult::class.'>',
             'json'
         );
+
         return $data['data'];
     }
 }

@@ -13,15 +13,13 @@ use PHPUnit\Framework\MockObject\Exception;
 use PHPUnit\Framework\MockObject\MockObject;
 use PHPUnit\Framework\TestCase;
 use Psr\Http\Message\ResponseInterface;
+use Psr\Http\Message\StreamInterface;
 
 class ClientTest extends TestCase
 {
     private MockObject $mockedGuzzleClient;
     private Client $client;
 
-    /**
-     * @throws Exception
-     */
     public function setUp(): void
     {
         $this->mockedGuzzleClient = $this->createMock(\GuzzleHttp\Client::class);
@@ -29,15 +27,24 @@ class ClientTest extends TestCase
         $this->client = ClientBuilder::create()->setGuzzleClient($this->mockedGuzzleClient)->build();
     }
 
+    private function createStubStream(string $streamText)
+    {
+        $stream = $this->createMock(StreamInterface::class);
+        $stream->method('__toString')->willReturn($streamText);
+
+        return $stream;
+    }
+
     /**
-     * @throws Exception
      * @throws \JsonException
      */
     private function createStabResponse(array $data): ResponseInterface
     {
         $responseStab = $this->createMock(ResponseInterface::class);
 
-        $responseStab->method('getBody')->willReturn(json_encode($data, JSON_THROW_ON_ERROR));
+        $responseStab->method('getBody')->willReturn(
+            $this->createStubStream(json_encode($data, JSON_THROW_ON_ERROR))
+        );
 
         return $responseStab;
     }
@@ -73,11 +80,11 @@ class ClientTest extends TestCase
                     'product_id' => 1,
                     'translations' => [
                         'eng' => [
-                            'parent_item_localization_code' => ['item1' => 'trItem1']
-                        ]
-                    ]
+                            'parent_item_localization_code' => ['item1' => 'trItem1'],
+                        ],
+                    ],
 
-                ]
+                ],
             ],
             [
                 '/api/translations/for-application',
@@ -87,8 +94,8 @@ class ClientTest extends TestCase
                         'product' => 'product_id',
                         'parent_level' => 'root',
                         'parent_type' => 'books',
-                    ]
-                ]
+                    ],
+                ],
             ]
         );
 
@@ -99,8 +106,8 @@ class ClientTest extends TestCase
             [
                 'eng' =>
                     [
-                        'parent_item_localization_code' => ['item1' => 'trItem1']
-                    ]
+                        'parent_item_localization_code' => ['item1' => 'trItem1'],
+                    ],
             ],
             $result->getTranslations()
         );
@@ -114,11 +121,11 @@ class ClientTest extends TestCase
     public function testPostCatalogsItems(): void
     {
         $request = new PostCatalogsItemsRequest(
-            catalogName: 'cat_name',
-            itemId: 'items_id',
-            itemValue: 'item_value',
-            translations: [
-                new Translation('language_code', 'translation')
+            'cat_name',
+            'items_id',
+            'item_value',
+            [
+                new Translation('language_code', 'translation'),
             ]
         );
 
@@ -136,15 +143,15 @@ class ClientTest extends TestCase
                             'application_id' => '-1',
                             'language_code' => 'rus',
                             'translation' => 'Перевод',
-                        ]
-                    ]
-                ]
+                        ],
+                    ],
+                ],
             ],
             [
                 '/api/localizer/catalogs/items',
                 [
-                    'body' => '{"catalog_name":"cat_name","item_id":"items_id","organization_id":-1,"application_id":-1,"item_value":"item_value","translations":[{"language_code":"language_code","translation":"translation"}]}'
-                ]
+                    'body' => '{"catalog_name":"cat_name","item_id":"items_id","organization_id":-1,"application_id":-1,"item_value":"item_value","translations":[{"language_code":"language_code","translation":"translation"}]}',
+                ],
             ]
         );
 

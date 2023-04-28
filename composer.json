@@ -3,9 +3,11 @@
     "description": "Localizator's api client (sdk)",
     "type": "library",
     "require": {
+        "php": "^7.4",
+        "ext-json": "*",
         "guzzlehttp/guzzle": "7.5",
-        "jms/serializer": "^3.0@dev",
-        "symfony/cache": "6.3.x-dev"
+        "jms/serializer": "^3.0",
+        "symfony/cache": "5.4.x"
     },
     "autoload": {
         "psr-4": {
@@ -22,9 +24,10 @@
             "name": "ids"
         }
     ],
-    "minimum-stability": "dev",
+    "minimum-stability": "stable",
     "require-dev": {
-        "phpunit/phpunit": "^10.1@dev",
-        "symfony/var-dumper": "6.3.x-dev"
+        "phpunit/phpunit": "9.6.x-dev",
+        "symfony/var-dumper": "5.4.x-dev",
+        "ext-redis": "*"
     }
 }
