@@ -30,6 +30,15 @@ class TranslateTest extends TestCase
             ->build();
     }
 
+
+    private function mustHaveCache(string $key, string $value): void
+    {
+        $item = $this->createMock(CacheItemInterface::class);
+        $item->method('get')->willReturn($value);
+        $this->redisAdapterMock->method('hasItem')->with($key)->willReturn(true);
+        $this->redisAdapterMock->method('getItem')->with($key)->willReturn($item);
+    }
+
     /**
      * @throws GuzzleException
      * @throws InvalidArgumentException
@@ -38,14 +47,6 @@ class TranslateTest extends TestCase
     {
         $result = $this->translator->translate('rus', 'my_catalog', 'my_code');
         $this->assertNull($result);
-    }
-
-    public function mustHaveCache(string $key, string $value): void
-    {
-        $item = $this->createMock(CacheItemInterface::class);
-        $item->method('get')->willReturn($value);
-        $this->redisAdapterMock->method('hasItem')->with($key)->willReturn(true);
-        $this->redisAdapterMock->method('getItem')->with($key)->willReturn($item);
     }
 
     /**
