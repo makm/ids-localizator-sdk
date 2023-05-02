@@ -5,9 +5,9 @@
     "require": {
         "php": "^7.4|^8.0",
         "ext-json": "*",
-        "guzzlehttp/guzzle": "7.5",
+        "guzzlehttp/guzzle": "^7",
         "psr/cache": "^1.0|^2.0|^3.0",
-        "jms/serializer": "^3.23"
+        "jms/serializer": "^3"
     },
     "autoload": {
         "psr-4": {
