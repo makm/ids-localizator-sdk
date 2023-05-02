@@ -6,8 +6,8 @@
         "php": "^7.4|^8.0",
         "ext-json": "*",
         "guzzlehttp/guzzle": "7.5",
-        "jms/serializer": "^3.14",
-        "psr/cache": "^1.0|^2.0|^3.0"
+        "psr/cache": "^1.0|^2.0|^3.0",
+        "jms/serializer": "^3.23"
     },
     "autoload": {
         "psr-4": {
