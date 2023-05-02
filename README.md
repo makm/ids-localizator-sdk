@@ -2,7 +2,7 @@
 
 Install
 ```shell script
-composer install ids/localizator
+composer install idynsys/localizator
 ```
 
 
