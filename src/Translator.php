@@ -8,6 +8,7 @@ use Ids\Localizator\Client\Client;
 use Ids\Localizator\Client\Request\Catalogs\PostCatalogsItems\PostCatalogsItemsRequest;
 use Ids\Localizator\Client\Request\Catalogs\PostCatalogsItems\Translation;
 use Ids\Localizator\Client\Request\Translations\GetTranslationsApplication\GetTranslationsApplicationRequest;
+use Ids\Localizator\Exception\CantDetermineProductIdException;
 use Psr\Cache\CacheItemPoolInterface;
 use Psr\Cache\InvalidArgumentException;
 
@@ -19,38 +20,33 @@ class Translator
 
     private Client $client;
     private CacheItemPoolInterface $itemPool;
-    private int $organizationId;
-    private ?int $applicationId;
-    private ?string $productId;
+    private int $applicationId;
+    private ?int $defaultProductId;
+    private string $currentLang;
+    private ?int $organizationId;
 
-    /**
-     * @param  Client  $client
-     * @param  CacheItemPoolInterface  $itemPool
-     * @param  int  $organizationId
-     * @param  int|null  $applicationId
-     * @param  string|null  $productId
-     */
     public function __construct(
         Client $client,
         CacheItemPoolInterface $itemPool,
-        int $organizationId,
-        ?int $applicationId,
-        ?string $productId
+        int $applicationId,
+        ?string $currentLang = 'rus',
+        ?int $defaultProductId = null,
+        ?int $organizationId = null
     ) {
         $this->client = $client;
         $this->itemPool = $itemPool;
-        $this->organizationId = $organizationId;
         $this->applicationId = $applicationId;
-        $this->productId = $productId;
+        $this->currentLang = $currentLang;
+        $this->defaultProductId = $defaultProductId;
+        $this->organizationId = $organizationId;
     }
 
-
-    private function getCacheKey(string $lang, string $categoryName, string $code): string
+    private function getCacheKey(string $lang, string $categoryName, string $code, int $productId = null): string
     {
         return sprintf(
             '%s-%s_%s-%s-%s',
             $this->applicationId ?: 'no-app',
-            $this->productId ?: 'no-prod',
+            $productId ?? $this->defaultProductId,
             strtolower($lang),
             $categoryName,
             $code
@@ -63,7 +59,7 @@ class Translator
     }
 
     /**
-     * @param  bool  $warmCacheIfEmpty
+     * @param bool $warmCacheIfEmpty
      * @return Translator
      */
     public function setWarmCacheIfEmpty(bool $warmCacheIfEmpty): Translator
@@ -77,13 +73,13 @@ class Translator
      * @throws InvalidArgumentException
      * @throws GuzzleException
      */
-    public function translate(string $lang, string $catalogName, string $code): ?string
+    public function translate(string $catalogName, string $code, int $productId = null): ?string
     {
         if ($this->warmCacheIfEmpty && $this->getLatestWarming() === null) {
             $this->warmCache();
         }
 
-        $key = $this->getCacheKey($lang, $catalogName, $code);
+        $key = $this->getCacheKey($this->currentLang, $catalogName, $code, $this->getProductIdForUse($productId));
         if ($this->itemPool->hasItem($key)) {
             return $this->itemPool->getItem($key)->get();
         }
@@ -91,22 +87,34 @@ class Translator
         return null;
     }
 
+    private function getProductIdForUse(?int $productId): int
+    {
+        $useProductId = $productId ?: $this->defaultProductId;
+        if ($useProductId === null) {
+            throw new CantDetermineProductIdException('Can\'t determine productId for use');
+        }
+
+        return $useProductId;
+    }
+
     /**
      * @throws GuzzleException
      * @throws InvalidArgumentException
+     * @throws \Exception
      */
-    public function addTranslation(string $lang, string $catalogName, string $code, string $value): void
+    public function addTranslation(string $catalogName, string $code, string $value, int $productId = null): void
     {
+        $useProductId = $this->getProductIdForUse($productId);
         $postRequest = new PostCatalogsItemsRequest(
+            $this->applicationId,
             $catalogName,
             $code,
             null,
             [
-                new Translation($lang, $value),
+                new Translation($this->currentLang, $value),
             ],
             $this->organizationId,
-            $this->applicationId,
-            $this->productId
+            $useProductId
         );
 
         $result = $this->client->postCatalogItems($postRequest);
@@ -115,7 +123,8 @@ class Translator
                 $translation->getLanguageCode(),
                 $catalogName,
                 $result->getItemId(),
-                $translation->getTranslation()
+                $translation->getTranslation(),
+                $useProductId
             );
         }
     }
@@ -137,13 +146,16 @@ class Translator
     private function warmCache(): void
     {
         $result = $this->client->getGetTranslationsApplication(
-            new GetTranslationsApplicationRequest($this->applicationId, $this->productId)
+            new GetTranslationsApplicationRequest($this->applicationId, 'C')
         );
 
-        foreach ($result->getTranslations() as $lang => $langTranslations) {
-            foreach ($langTranslations as $catalogName => $parentItemTranslation) {
-                foreach ($parentItemTranslation as $code => $translation) {
-                    $this->saveItem($lang, $catalogName, $code, $translation);
+        foreach ($result->getUIitems() as $UIItem) {
+            $productId = $UIItem->getProductId();
+            foreach ($UIItem->getTranslations() as $langCode => $landTranslation) {
+                foreach ($landTranslation as $catalogName => $catalogTranslation) {
+                    foreach ($catalogTranslation as $code => $translation) {
+                        $this->saveItem($langCode, $catalogName, $code, $translation, $productId);
+                    }
                 }
             }
         }
@@ -170,9 +182,14 @@ class Translator
     /**
      * @throws InvalidArgumentException
      */
-    private function saveItem(string $lang, string $catalogName, string $code, string $translation): void
-    {
-        $key = $this->getCacheKey($lang, $catalogName, $code);
+    private function saveItem(
+        string $lang,
+        string $catalogName,
+        string $code,
+        string $translation,
+        int $productId
+    ): void {
+        $key = $this->getCacheKey($lang, $catalogName, $code, $productId);
         $item = $this->itemPool->getItem($key);
         $item
             ->set($translation)

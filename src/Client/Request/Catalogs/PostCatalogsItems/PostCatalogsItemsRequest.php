@@ -6,10 +6,10 @@ use JMS\Serializer\Annotation as Serializer;
 
 class PostCatalogsItemsRequest
 {
+    protected int $applicationId;
     protected string $catalogName;
     protected string $itemId;
     protected ?int $organizationId = null;
-    protected ?int $applicationId = null;
     protected ?int $productId = null;
     protected ?int $catalogDescription = null;
     protected ?string $itemValue = null;
@@ -20,12 +20,12 @@ class PostCatalogsItemsRequest
     protected array $translations = [];
 
     public function __construct(
+        int $applicationId,
         string $catalogName,
         string $itemId,
         ?string $itemValue = null,
         array $translations = [],
         ?int $organizationId = -1,
-        ?int $applicationId = -1,
         ?int $productId = null,
         ?int $catalogDescription = null
     ) {

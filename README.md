@@ -2,22 +2,38 @@
 
 Install
 ```shell script
-composer install idynsys/localizator
-```
-
-
-Configuration simple:
-```
+composer req idynsys/localizator
 ```
 
 
 
+Как использовать:
 
-use fix docker
+```
+// $productId не является обязательным для установки в setDefaultProductId. 
+// Тогда необходимо указывать его при получении перевода:  
+// $translator->translate('Organizations', 'title', 5);
+
+        $applicationId = 1;
+        $productId  = 5; 
+
+        $translator = TranslatorFactory::create($applicationId, 'rus')
+            ->setDefaultProductId($productId)
+            ->build();
+            
+        $translation = $translator->translate('Organizations', 'title');            
+```
+
+
+
+Некоторые команды для разработки
+
 ```
 docker-compose run --rm php-cli composer --version
 docker-compose run --rm php-cli composer install
-docker-compose run --rm php-cli composer require jms/serializer
 ```
 
-
+Запустить тесты
+```
+docker-compose run --rm php-cli /composer-package/vendor/phpunit/phpunit/phpunit --no-configuration /composer-package/tests
+```

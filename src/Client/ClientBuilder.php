@@ -8,12 +8,12 @@ use JMS\Serializer\SerializerInterface;
 
 class ClientBuilder
 {
+    public const LOCALIZATOR_URL = 'https://localizator.prod.idynsys.org';
     private string $localizatorUrl;
-    private const LOCALIZATOR_URL = 'https://localizator.idynsys.org';
     private ClientInterface $guzzleClient;
     private SerializerInterface $serializer;
 
-    public function __construct(?string $localizatorUrl)
+    public function __construct(?string $localizatorUrl= null)
     {
         $this->localizatorUrl = $localizatorUrl ?: self::LOCALIZATOR_URL;
         $this->configureDefaultClient();

@@ -72,7 +72,7 @@ class ClientTest extends TestCase
      */
     public function testGetTranslationsApplication(): void
     {
-        $request = new GetTranslationsApplicationRequest('best_app', 'product_id', 'root', 'books');
+        $request = new GetTranslationsApplicationRequest(5, 'C', 6, 'books');
         $this->waitResponse(
             'get',
             [
@@ -90,10 +90,10 @@ class ClientTest extends TestCase
                 '/api/translations/for-application',
                 [
                     'query' => [
-                        'application' => 'best_app',
-                        'product' => 'product_id',
-                        'parent_level' => 'root',
-                        'parent_type' => 'books',
+                        'application' => 5,
+                        'product' => 6,
+                        'parent_level' => 'books',
+                        'parent_type' => 'C',
                     ],
                 ],
             ]
@@ -121,7 +121,8 @@ class ClientTest extends TestCase
     public function testPostCatalogsItems(): void
     {
         $request = new PostCatalogsItemsRequest(
-            'cat_name',
+            1,
+            'catalog_name',
             'items_id',
             'item_value',
             [
@@ -150,7 +151,7 @@ class ClientTest extends TestCase
             [
                 '/api/localizer/catalogs/items',
                 [
-                    'body' => '{"catalog_name":"cat_name","item_id":"items_id","organization_id":-1,"application_id":-1,"item_value":"item_value","translations":[{"language_code":"language_code","translation":"translation"}]}',
+                    'body' => '{"application_id":1,"catalog_name":"catalog_name","item_id":"items_id","organization_id":-1,"item_value":"item_value","translations":[{"language_code":"language_code","translation":"translation"}]}',
                 ],
             ]
         );
