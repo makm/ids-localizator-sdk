@@ -21,7 +21,7 @@ class TranslatorFactory
     public function __construct(
         int $applicationId,
         int $organizationId = null,
-        ?string $currentLang = 'rus',
+        ?string $currentLang = 'rus'
     ) {
         $this->applicationId = $applicationId;
         $this->organizationId = $organizationId;
