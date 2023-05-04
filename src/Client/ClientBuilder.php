@@ -3,17 +3,19 @@
 namespace Ids\Localizator\Client;
 
 use GuzzleHttp\ClientInterface;
+use JMS\Serializer\Naming\IdenticalPropertyNamingStrategy;
+use JMS\Serializer\Naming\SerializedNameAnnotationStrategy;
 use JMS\Serializer\SerializerBuilder;
 use JMS\Serializer\SerializerInterface;
 
 class ClientBuilder
 {
+    public const LOCALIZATOR_URL = 'https://localizator.prod.idynsys.org';
     private string $localizatorUrl;
-    private const LOCALIZATOR_URL = 'https://localizator.idynsys.org';
     private ClientInterface $guzzleClient;
     private SerializerInterface $serializer;
 
-    public function __construct(?string $localizatorUrl)
+    public function __construct(?string $localizatorUrl = null)
     {
         $this->localizatorUrl = $localizatorUrl ?: self::LOCALIZATOR_URL;
         $this->configureDefaultClient();
@@ -26,7 +28,7 @@ class ClientBuilder
     }
 
     /**
-     * @param  ClientInterface  $guzzleClient
+     * @param ClientInterface $guzzleClient
      * @return ClientBuilder
      */
     public function setGuzzleClient(ClientInterface $guzzleClient): ClientBuilder
@@ -37,7 +39,7 @@ class ClientBuilder
     }
 
     /**
-     * @param  SerializerInterface  $serializer
+     * @param SerializerInterface $serializer
      * @return ClientBuilder
      */
     public function setSerializer(SerializerInterface $serializer): ClientBuilder
@@ -59,9 +61,11 @@ class ClientBuilder
 
     public function configureDefaultSerializer(): void
     {
-        $this->serializer = SerializerBuilder::create()
-//            ->setPropertyNamingStrategy(new SerializedNameAnnotationStrategy(new IdenticalPropertyNamingStrategy()))
-            ->build();
+        $this->setSerializer(
+            SerializerBuilder::create()
+                //->setPropertyNamingStrategy(new SerializedNameAnnotationStrategy(new IdenticalPropertyNamingStrategy()))
+                ->build()
+        );
     }
 
     public function build(): Client

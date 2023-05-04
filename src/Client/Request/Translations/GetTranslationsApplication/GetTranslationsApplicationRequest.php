@@ -9,30 +9,32 @@ class GetTranslationsApplicationRequest
     /**
      * @Serializer\SerializedName("application")
      */
-    protected ?string $applicationId = null;
+    protected int $applicationId;
+
+    /**
+     * @Serializer\SerializedName("parentType")
+     */
+    protected ?string $parentType = 'C';
+
     /**
      * @Serializer\SerializedName("product")
      */
-    protected ?string $productId = null;
-
-    protected ?string $parentLevel = null;
-    protected ?string $parentType = null;
+    protected ?int $productId = null;
 
     /**
-     * @param string|null $applicationId
-     * @param string|null $productId
-     * @param string|null $parentLevel
-     * @param string|null $parentType
+     * @Serializer\SerializedName("parentLevel")
      */
+    protected ?string $parentLevel = null;
+
     public function __construct(
-        ?string $applicationId = null,
+        string $applicationId = null,
+        ?string $parentType = null,
         ?string $productId = null,
-        ?string $parentLevel = null,
-        ?string $parentType = null
+        ?string $parentLevel = null
     ) {
         $this->applicationId = $applicationId;
+        $this->parentType = $parentType;
         $this->productId = $productId;
         $this->parentLevel = $parentLevel;
-        $this->parentType = $parentType;
     }
 }

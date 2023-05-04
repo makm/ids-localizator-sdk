@@ -6,26 +6,32 @@ use JMS\Serializer\Annotation as Serializer;
 
 class GetTranslationsApplicationResult
 {
-    protected string $productId;
+    /**
+     * @Serializer\Type("array<Ids\Localizator\Client\Response\Translation\GetTranslationsApplication\TranslationItem>")
+     * @Serializer\SerializedName("catalogsAll")
+     */
+    // @todo временно не мапим.
+     protected array $catalogs = [];
 
     /**
-     * @Serializer\Type("array")
+     * @Serializer\Type("array<Ids\Localizator\Client\Response\Translation\GetTranslationsApplication\TranslationItem>")
+     * @Serializer\SerializedName("UI items")
      */
-    protected array $translations;
+    protected array $UIitems = [];
 
     /**
-     * @return string
+     * @return TranslationItem[]
      */
-    public function getProductId(): string
+    public function getCatalogs(): array
     {
-        return $this->productId;
+        return $this->catalogs;
     }
 
     /**
-     * @return array
+     * @return TranslationItem[]
      */
-    public function getTranslations(): array
+    public function getUIitems(): array
     {
-        return $this->translations;
+        return $this->UIitems;
     }
 }
