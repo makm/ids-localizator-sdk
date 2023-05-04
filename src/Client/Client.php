@@ -36,7 +36,6 @@ class Client
             ]
         );
 
-
         $data = $this->serializer->deserialize(
             $response->getBody()->getContents(),
             'array<string,' . GetTranslationsApplicationResult::class . '>',
@@ -59,7 +58,7 @@ class Client
         );
 
         $data = $this->serializer->deserialize(
-            $response->getBody(),
+            $response->getBody()->getContents(),
             'array<string,' . PostCatalogsItemsResult::class . '>',
             'json'
         );

@@ -24,7 +24,7 @@ class TranslateTest extends TestCase
 
         $this->redisAdapterMock = $this->createMock(RedisAdapter::class);
 
-        $this->translator = TranslatorFactory::create()
+        $this->translator = TranslatorFactory::create(1, 'rus')
             ->setCache($this->redisAdapterMock)
             ->setClient($this->translatorClientMock)
             ->build();
@@ -33,8 +33,18 @@ class TranslateTest extends TestCase
 
     private function mustHaveCache(string $key, string $value): void
     {
+        //
+        $itemLastTime = $this->createMock(CacheItemInterface::class);
+        $itemLastTime->method('get')->willReturn((new \DateTime('+10 years'))->format(DATE_ATOM));
+
+
+        //create items
         $item = $this->createMock(CacheItemInterface::class);
         $item->method('get')->willReturn($value);
+
+        //return value
+        $this->redisAdapterMock->method('hasItem')->with('translator_last_warming_time')->willReturn(true);
+        $this->redisAdapterMock->method('getItem')->with('translator_last_warming_time')->willReturn($itemLastTime);
         $this->redisAdapterMock->method('hasItem')->with($key)->willReturn(true);
         $this->redisAdapterMock->method('getItem')->with($key)->willReturn($item);
     }
@@ -58,13 +68,13 @@ class TranslateTest extends TestCase
     public function testPostAndCheckTranslate(): void
     {
         $this->translator->addTranslation(
-            'rus',
             'my_catalog',
             'my_code',
-            'my_translation'
+            'my_translation',
+            2
         );
-        $this->mustHaveCache('-1-no-prod_rus-my_catalog-my_code','my_translation');
-        $result = $this->translator->translate('rus', 'my_catalog', 'my_code');
-        $this->assertEquals('my_translation', $result);
+        $this->mustHaveCache('-1-no-prod_rus-my_catalog-my_code', 'my_translation');
+        $result = $this->translator->translate('rus', 'my_catalog', 2);
+        $this->assertEquals('my_translation', (string)$result);
     }
 }

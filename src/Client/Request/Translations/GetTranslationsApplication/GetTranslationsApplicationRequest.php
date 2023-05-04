@@ -10,17 +10,25 @@ class GetTranslationsApplicationRequest
      * @Serializer\SerializedName("application")
      */
     protected int $applicationId;
-    protected string $parentType = 'C';
+
+    /**
+     * @Serializer\SerializedName("parentType")
+     */
+    protected ?string $parentType = 'C';
+
     /**
      * @Serializer\SerializedName("product")
      */
     protected ?int $productId = null;
 
+    /**
+     * @Serializer\SerializedName("parentLevel")
+     */
     protected ?string $parentLevel = null;
 
     public function __construct(
         string $applicationId = null,
-        string $parentType = 'C',
+        ?string $parentType = null,
         ?string $productId = null,
         ?string $parentLevel = null
     ) {

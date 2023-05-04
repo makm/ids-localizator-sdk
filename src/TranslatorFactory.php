@@ -10,13 +10,14 @@ use Symfony\Component\Cache\Adapter\FilesystemAdapter;
 
 class TranslatorFactory
 {
+    private const DEFAULT_LANG = 'rus';
+    private Client $client;
+    private CacheItemPoolInterface $cache;
     private int $applicationId;
     private string $currentLang;
     private ?string $localizatorUrl;
-    private ?int $organizationId;
     private ?int $defaultProductId = null;
-    private Client $client;
-    private CacheItemPoolInterface $cache;
+    private ?int $organizationId;
 
     public function __construct(
         int $applicationId,
@@ -34,7 +35,7 @@ class TranslatorFactory
         string $currentLang,
         int $organizationId = null
     ): self {
-        return new static($applicationId, $organizationId, $currentLang ?? 'rus');
+        return new static($applicationId, $organizationId, $currentLang ?? self::DEFAULT_LANG);
     }
 
     public function configureDefaultCacheAdapter(): void

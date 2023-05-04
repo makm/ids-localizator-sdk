@@ -30,7 +30,7 @@ class ClientTest extends TestCase
     private function createStubStream(string $streamText)
     {
         $stream = $this->createMock(StreamInterface::class);
-        $stream->method('__toString')->willReturn($streamText);
+        $stream->method('getContents')->willReturn($streamText);
 
         return $stream;
     }
@@ -77,40 +77,46 @@ class ClientTest extends TestCase
             'get',
             [
                 'data' => [
-                    'product_id' => 1,
-                    'translations' => [
-                        'eng' => [
-                            'parent_item_localization_code' => ['item1' => 'trItem1'],
+                    'UI items' => [
+                        [
+                            'product_id' => 1,
+                            'translations' => [
+                                'eng' => [
+                                    'parent_item_localization_code' => ['item1' => 'trItem1'],
+                                ],
+                            ]
                         ],
-                    ],
+                    ]
 
                 ],
             ],
             [
                 '/api/translations/for-application',
                 [
-                    'query' => [
+                    'json' => [
                         'application' => 5,
                         'product' => 6,
-                        'parent_level' => 'books',
-                        'parent_type' => 'C',
+                        'parentLevel' => 'books',
+                        'parentType' => 'C',
                     ],
                 ],
             ]
         );
 
         $result = $this->client->getGetTranslationsApplication($request);
-        // $this->assertInstanceOf(GetTranslationsApplicationResult::class, $result);
-        $this->assertEquals(1, $result->getProductId());
-        $this->assertEquals(
-            [
-                'eng' =>
-                    [
-                        'parent_item_localization_code' => ['item1' => 'trItem1'],
-                    ],
-            ],
-            $result->getTranslations()
-        );
+
+        foreach ($result->getUIitems() as $item) {
+            $this->assertEquals(1, $item->getProductId());
+            $this->assertEquals(
+                [
+                    'eng' =>
+                        [
+                            'parent_item_localization_code' => ['item1' => 'trItem1'],
+                        ],
+                ],
+                $item->getTranslations()
+            );
+        }
     }
 
     /**
