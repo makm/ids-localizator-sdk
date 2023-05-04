@@ -3,8 +3,6 @@
 namespace Ids\Localizator\Client;
 
 use GuzzleHttp\ClientInterface;
-use JMS\Serializer\Naming\IdenticalPropertyNamingStrategy;
-use JMS\Serializer\Naming\SerializedNameAnnotationStrategy;
 use JMS\Serializer\SerializerBuilder;
 use JMS\Serializer\SerializerInterface;
 
@@ -15,7 +13,7 @@ class ClientBuilder
     private ClientInterface $guzzleClient;
     private SerializerInterface $serializer;
 
-    public function __construct(?string $localizatorUrl = null)
+    public function __construct(?string $localizatorUrl= null)
     {
         $this->localizatorUrl = $localizatorUrl ?: self::LOCALIZATOR_URL;
         $this->configureDefaultClient();
@@ -28,7 +26,7 @@ class ClientBuilder
     }
 
     /**
-     * @param ClientInterface $guzzleClient
+     * @param  ClientInterface  $guzzleClient
      * @return ClientBuilder
      */
     public function setGuzzleClient(ClientInterface $guzzleClient): ClientBuilder
@@ -39,7 +37,7 @@ class ClientBuilder
     }
 
     /**
-     * @param SerializerInterface $serializer
+     * @param  SerializerInterface  $serializer
      * @return ClientBuilder
      */
     public function setSerializer(SerializerInterface $serializer): ClientBuilder
@@ -61,11 +59,9 @@ class ClientBuilder
 
     public function configureDefaultSerializer(): void
     {
-        $this->setSerializer(
-            SerializerBuilder::create()
-                //->setPropertyNamingStrategy(new SerializedNameAnnotationStrategy(new IdenticalPropertyNamingStrategy()))
-                ->build()
-        );
+        $this->serializer = SerializerBuilder::create()
+//            ->setPropertyNamingStrategy(new SerializedNameAnnotationStrategy(new IdenticalPropertyNamingStrategy()))
+            ->build();
     }
 
     public function build(): Client

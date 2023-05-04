@@ -16,8 +16,6 @@ class Translator
 {
     private const DEFAULT_EXPIRES_AFTER = '10 years';
     private const LAST_WARMING_TIME_KEY = 'translator_last_warming_time';
-    public const PARENT_TYPE_CATALOG = 'C';
-    public const PARENT_TYPE_UI_ITEM = 'I';
     private bool $warmCacheIfEmpty = false;
 
     private Client $client;
@@ -43,16 +41,10 @@ class Translator
         $this->organizationId = $organizationId;
     }
 
-    private function getCacheKey(
-        string $type,
-        string $lang,
-        string $categoryName,
-        string $code,
-        int $productId = null
-    ): string {
+    private function getCacheKey(string $lang, string $categoryName, string $code, int $productId = null): string
+    {
         return sprintf(
-            '%s:%s-%s_%s-%s-%s',
-            $type,
+            '%s-%s_%s-%s-%s',
             $this->applicationId ?: 'no-app',
             $productId ?? $this->defaultProductId,
             strtolower($lang),
@@ -81,57 +73,18 @@ class Translator
      * @throws InvalidArgumentException
      * @throws GuzzleException
      */
-    private function getTranslationByType(
-        string $type,
-        string $catalogName,
-        string $code,
-        int $productId = null
-    ) {
+    public function translate(string $catalogName, string $code, int $productId = null): ?string
+    {
         if ($this->warmCacheIfEmpty && $this->getLatestWarming() === null) {
             $this->warmCache();
         }
 
-        $key = $this->getCacheKey(
-            $type,
-            $this->currentLang,
-            $catalogName,
-            $code,
-            $this->getProductIdForUse($productId)
-        );
-
+        $key = $this->getCacheKey($this->currentLang, $catalogName, $code, $this->getProductIdForUse($productId));
         if ($this->itemPool->hasItem($key)) {
             return $this->itemPool->getItem($key)->get();
         }
 
         return null;
-    }
-
-    public function setDefaultProductId(?int $defaultProductId): Translator
-    {
-        $this->defaultProductId = $defaultProductId;
-        return $this;
-    }
-
-
-
-    /**
-     * @throws InvalidArgumentException
-     * @throws GuzzleException
-     */
-    public function translate(string $catalogName, string $code, int $productId = null): ?TranslationString
-    {
-        $translation = $this->getTranslationByType(self::PARENT_TYPE_CATALOG, $catalogName, $code, $productId);
-        return $translation ? new TranslationString($translation) : null;
-    }
-
-    /**
-     * @throws GuzzleException
-     * @throws InvalidArgumentException
-     */
-    public function translateUi(string $catalogName, string $code, int $productId = null): ?TranslationString
-    {
-        $translation = $this->getTranslationByType(self::PARENT_TYPE_UI_ITEM, $catalogName, $code, $productId);
-        return $translation ? new TranslationString($translation) : null;
     }
 
     private function getProductIdForUse(?int $productId): int
@@ -149,13 +102,8 @@ class Translator
      * @throws InvalidArgumentException
      * @throws \Exception
      */
-    public function addTranslation(
-        string $catalogName,
-        string $code,
-        string $value,
-        int $productId = null,
-        string $type = 'I'
-    ): void {
+    public function addTranslation(string $catalogName, string $code, string $value, int $productId = null): void
+    {
         $useProductId = $this->getProductIdForUse($productId);
         $postRequest = new PostCatalogsItemsRequest(
             $this->applicationId,
@@ -176,8 +124,7 @@ class Translator
                 $catalogName,
                 $result->getItemId(),
                 $translation->getTranslation(),
-                $useProductId,
-                $type
+                $useProductId
             );
         }
     }
@@ -199,7 +146,7 @@ class Translator
     private function warmCache(): void
     {
         $result = $this->client->getGetTranslationsApplication(
-            new GetTranslationsApplicationRequest($this->applicationId)
+            new GetTranslationsApplicationRequest($this->applicationId, 'C')
         );
 
         foreach ($result->getUIitems() as $UIItem) {
@@ -207,23 +154,11 @@ class Translator
             foreach ($UIItem->getTranslations() as $langCode => $landTranslation) {
                 foreach ($landTranslation as $catalogName => $catalogTranslation) {
                     foreach ($catalogTranslation as $code => $translation) {
-                        $this->saveItem($langCode, $catalogName, $code, $translation, $productId, self::PARENT_TYPE_UI_ITEM);
+                        $this->saveItem($langCode, $catalogName, $code, $translation, $productId);
                     }
                 }
             }
         }
-
-        foreach ($result->getCatalogs() as $catalogItem) {
-            $productId = $catalogItem->getProductId();
-            foreach ($catalogItem->getTranslations() as $langCode => $landTranslation) {
-                foreach ($landTranslation as $catalogName => $catalogTranslation) {
-                    foreach ($catalogTranslation as $code => $translation) {
-                        $this->saveItem($langCode, $catalogName, $code, $translation, $productId, self::PARENT_TYPE_CATALOG);
-                    }
-                }
-            }
-        }
-
 
         $lastWarmingTimeItem = $this->itemPool->getItem(self::LAST_WARMING_TIME_KEY);
         $lastWarmingTimeItem->set((new \DateTime())->format(DateTimeInterface::ATOM));
@@ -252,10 +187,9 @@ class Translator
         string $catalogName,
         string $code,
         string $translation,
-        int $productId,
-        string $type
+        int $productId
     ): void {
-        $key = $this->getCacheKey($type, $lang, $catalogName, $code, $productId);
+        $key = $this->getCacheKey($lang, $catalogName, $code, $productId);
         $item = $this->itemPool->getItem($key);
         $item
             ->set($translation)
